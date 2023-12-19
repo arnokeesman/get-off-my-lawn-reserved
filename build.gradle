@@ -86,6 +86,9 @@ dependencies {
 	modImplementation include("xyz.nucleoid:server-translations-api:${project.stapi_version}")
 	modImplementation include("me.lucko:fabric-permissions-api:0.2-SNAPSHOT")
 	modImplementation include("eu.pb4:common-protection-api:1.0.0")
+
+	compileOnly "us.dynmap:DynmapCoreAPI:${dynmap_version}"
+	modImplementation "curse.maven:dynmapforge-59433:4958242"  // TODO: remove
 }
 
 processResources {
