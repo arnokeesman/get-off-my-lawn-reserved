@@ -50,6 +50,8 @@ repositories {
 
 	maven { url 'https://repo.mikeprimm.com/' }
 
+	maven { url = "https://repo.mikeprimm.com/" }
+
 	mavenLocal()
 }
 
@@ -78,6 +80,8 @@ dependencies {
 
 	modCompileOnly "maven.modrinth:argonauts:${project.argonauts_version}"
 	modCompileOnly "maven.modrinth:resourceful-lib:${project.reslib_version}"
+
+	compileOnly "us.dynmap:DynmapCoreAPI:${project.dynmap_version}"
 
 	// Server side stuff
 	modImplementation include("eu.pb4:polymer-core:${project.polymer_version}")

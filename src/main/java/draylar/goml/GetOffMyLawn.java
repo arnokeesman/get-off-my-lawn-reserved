@@ -8,6 +8,7 @@ import draylar.goml.api.GomlProtectionProvider;
 import draylar.goml.cca.ClaimComponent;
 import draylar.goml.cca.WorldClaimComponent;
 import draylar.goml.compat.ArgonautsCompat;
+import draylar.goml.compat.DynmapCompat;
 import draylar.goml.other.CardboardWarning;
 import draylar.goml.other.ClaimCommand;
 import draylar.goml.config.GOMLConfig;
@@ -79,6 +80,10 @@ public class GetOffMyLawn implements ModInitializer, WorldComponentInitializer {
         if (FabricLoader.getInstance().isModLoaded("argonauts")) {
             ArgonautsCompat.init();
         }
+        if (FabricLoader.getInstance().isModLoaded("dynmap")) {
+            ServerLifecycleEvents.SERVER_STARTED.register(DynmapCompat::init);
+        }
+
 
         ServerChunkEvents.CHUNK_LOAD.register((world, chunk) -> {
             CLAIM.get(world).getClaims().entries().filter(x -> {
