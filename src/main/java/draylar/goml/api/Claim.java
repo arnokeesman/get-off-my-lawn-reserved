@@ -71,6 +71,7 @@ public class Claim {
 
     private final List<PlayerEntity> previousTickPlayers = new ArrayList<>();
     private boolean destroyed = false;
+    private boolean created = false;
 
     @ApiStatus.Internal
     public Claim(MinecraftServer server, Set<UUID> owners, Set<UUID> trusted, BlockPos origin) {
@@ -89,11 +90,12 @@ public class Claim {
     }
 
     public void addOwner(PlayerEntity player) {
-        owners.add(player.getUuid());
+        addOwner(player.getUuid());
     }
 
     public void addOwner(UUID id) {
         this.owners.add(id);
+        onUpdated();
     }
 
     public boolean hasPermission(PlayerEntity player) {
@@ -109,17 +111,17 @@ public class Claim {
         return hasDirectPermission(uuid);
     }
 
-
     public boolean hasDirectPermission(UUID uuid) {
         return owners.contains(uuid) || trusted.contains(uuid);
     }
 
     public void trust(PlayerEntity player) {
-        trusted.add(player.getUuid());
+        trust(player.getUuid());
     }
 
     public void trust(UUID uuid) {
         trusted.add(uuid);
+        onUpdated();
     }
 
     public void trust(PlayerGroup group) {
@@ -128,7 +130,7 @@ public class Claim {
     }
 
     public void untrust(PlayerEntity player) {
-        trusted.remove(player.getUuid());
+        untrust(player.getUuid());
     }
 
     public void untrust(PlayerGroup group) {
@@ -138,6 +140,7 @@ public class Claim {
 
     public void untrust(UUID uuid) {
         trusted.remove(uuid);
+        onUpdated();
     }
 
     /**
@@ -245,7 +248,6 @@ public class Claim {
 
         return nbt;
     }
-
 
     @ApiStatus.Internal
     public static Claim fromNbt(MinecraftServer server, NbtCompound nbt, int version) {
@@ -424,13 +426,20 @@ public class Claim {
     }
 
     @ApiStatus.Internal
+    public void internal_create() {
+        this.created = true;
+    }
+
+    @ApiStatus.Internal
     public void internal_setIcon(ItemStack stack) {
         this.icon = stack.copy();
+        onUpdated();
     }
 
     @ApiStatus.Internal
     public void internal_setType(ClaimAnchorBlock anchorBlock) {
         this.type = anchorBlock;
+        onUpdated();
     }
 
     @ApiStatus.Internal
@@ -495,6 +504,7 @@ public class Claim {
         for (var player : this.previousTickPlayers) {
             augment.onPlayerEnter(this, player);
         }
+        onUpdated();
     }
 
     public void removeAugment(BlockPos pos) {
@@ -503,11 +513,12 @@ public class Claim {
             for (var player : this.previousTickPlayers) {
                 augment.onPlayerExit(this, player);
             }
+            onUpdated();
         }
     }
 
     public boolean hasAugment() {
-        return this.augments.size() > 0;
+        return !this.augments.isEmpty();
     }
 
     public boolean hasAugment(Augment augment) {
@@ -569,9 +580,7 @@ public class Claim {
                     }
 
                     // Tick exit behavior
-                    this.previousTickPlayers.stream().filter(player -> !playersInClaim.contains(player)).forEach(player -> {
-                        augment.onPlayerExit(this, player);
-                    });
+                    this.previousTickPlayers.stream().filter(player -> !playersInClaim.contains(player)).forEach(player -> augment.onPlayerExit(this, player));
                 }
             }
 
@@ -624,5 +633,11 @@ public class Claim {
             }
         }
         return false;
+    }
+
+    private void onUpdated() {
+        if (this.created && !this.destroyed) {
+            ClaimEvents.CLAIM_UPDATED.invoker().onEvent(this);
+        }
     }
 }

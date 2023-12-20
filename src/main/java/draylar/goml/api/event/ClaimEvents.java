@@ -55,6 +55,14 @@ public class ClaimEvents {
             }
     );
 
+    public static final Event<GenericClaimEvent> CLAIM_UPDATED = EventFactory.createArrayBacked(GenericClaimEvent.class,
+        (listeners) -> (claim) -> {
+            for (var event : listeners) {
+                event.onEvent(claim);
+            }
+        }
+    );
+
     public interface InteractionHandler {
         ActionResult check(PlayerEntity player, World world, Hand hand, BlockPos pos, PermissionReason reason);
     }
