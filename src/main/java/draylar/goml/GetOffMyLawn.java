@@ -4,6 +4,7 @@ import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import dev.onyxstudios.cca.api.v3.component.ComponentRegistryV3;
 import dev.onyxstudios.cca.api.v3.world.WorldComponentFactoryRegistry;
 import dev.onyxstudios.cca.api.v3.world.WorldComponentInitializer;
+import draylar.goml.api.Claim;
 import draylar.goml.api.GomlProtectionProvider;
 import draylar.goml.cca.ClaimComponent;
 import draylar.goml.cca.WorldClaimComponent;
@@ -33,6 +34,8 @@ import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.world.chunk.WorldChunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.function.Consumer;
 
 public class GetOffMyLawn implements ModInitializer, WorldComponentInitializer {
 
@@ -83,8 +86,8 @@ public class GetOffMyLawn implements ModInitializer, WorldComponentInitializer {
             ServerLifecycleEvents.SERVER_STARTED.register(DynmapCompat::init);
         }
 
-        ServerChunkEvents.CHUNK_LOAD.register(GetOffMyLawn::onChunkLoad);
-        ServerChunkEvents.CHUNK_UNLOAD.register(GetOffMyLawn::onChunkLoad);
+        ServerChunkEvents.CHUNK_LOAD.register((world, server) -> GetOffMyLawn.onChunkEvent(world, server, Claim::internal_incrementChunks));
+        ServerChunkEvents.CHUNK_UNLOAD.register((world, server) -> GetOffMyLawn.onChunkEvent(world, server, Claim::internal_decrementChunks));
     }
 
     @Override
@@ -92,7 +95,7 @@ public class GetOffMyLawn implements ModInitializer, WorldComponentInitializer {
         registry.register(CLAIM, WorldClaimComponent::new);
     }
 
-    private static void onChunkLoad(ServerWorld world, WorldChunk chunk) {
+    private static void onChunkEvent(ServerWorld world, WorldChunk chunk, Consumer<Claim> chunkHandler) {
         CLAIM.get(world).getClaims().entries().filter(x -> {
             var minX = ChunkSectionPos.getSectionCoord(x.getKey().toBox().x1());
             var minZ = ChunkSectionPos.getSectionCoord(x.getKey().toBox().z1());
@@ -101,6 +104,6 @@ public class GetOffMyLawn implements ModInitializer, WorldComponentInitializer {
             var maxZ = ChunkSectionPos.getSectionCoord(x.getKey().toBox().z2());
 
             return (minX <= chunk.getPos().x && maxX >= chunk.getPos().x && minZ <= chunk.getPos().z && maxZ >= chunk.getPos().z);
-        }).forEach(x -> x.getValue().internal_incrementChunks());
+        }).forEach(x -> chunkHandler.accept(x.getValue()));
     }
 }
