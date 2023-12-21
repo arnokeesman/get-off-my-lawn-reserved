@@ -16,12 +16,10 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtLong;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -67,6 +65,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements PolymerObject
 
             // no augments, some queued from fromTag
             if (!anchor.loadPositions.isEmpty()) {
+                anchor.claim.internal_disableUpdates();
                 for (BlockPos foundPos : anchor.loadPositions) {
                     BlockEntity foundEntity = anchor.world.getBlockEntity(foundPos);
 
@@ -78,6 +77,7 @@ public class ClaimAnchorBlockEntity extends BlockEntity implements PolymerObject
                 }
 
                 anchor.loadPositions.clear();
+                anchor.claim.internal_enableUpdates();
             }
         }
     }

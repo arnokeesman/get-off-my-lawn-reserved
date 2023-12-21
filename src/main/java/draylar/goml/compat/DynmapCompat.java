@@ -71,41 +71,40 @@ public class DynmapCompat {
     }
 
     private static String getClaimLabel(Claim claim, MinecraftServer server) {
-        return getLabelLine(getLabelKey("claim_type"), getValueDiv(getHeadImage(claim.getType()) + claim.getType().getName().getString())) + // TODO: Shift name to account for icon
+        return getLabelLine(getLabelKey("claim_type"), getValueDiv(getHeadImage(claim.getType()) + claim.getType().getName().getString()), false) +
             getPlayers(getLabelKey("owners"), claim.getOwners(), server) +
             getPlayers(getLabelKey("trusted"), claim.getTrusted(), server) +
             getAugments(claim);
     }
 
     private static String getPlayers(Text key, Set<UUID> players, MinecraftServer server) {
-        return players.isEmpty() ? "" : "<br>" + getLabelLine(key, String.join(";", players.stream().map(uuid -> {
+        return players.isEmpty() ? "" : "<br>" + getLabelLine(key, players.stream().map(uuid -> {
             ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
             return getValueDiv((player == null ? uuid.toString() : "<img src=\"tiles/faces/16x16/" + player.getName().getString() + ".png\">" + player.getName().getString()));
-        }).toList()));
+        }).reduce("", (prev, curr) -> prev + curr), true);
     }
 
     private static String getAugments(Claim claim) {
         return claim.hasAugment() ?
-            "<br>" + getLabelLine(getLabelKey("augments"), String.join(";", claim.getAugments().values().stream().map(augment -> getValueDiv(
-                    getHeadImage((PolymerHeadBlock) augment) + augment.getAugmentName().getString() // TODO: Shift name to account for icon
+            "<br>" + getLabelLine(getLabelKey("augments"), claim.getAugments().values().stream().map(augment -> getValueDiv(
+                    getHeadImage((PolymerHeadBlock) augment) + augment.getAugmentName().getString()
                 )
-            ).toList())) :
+            ).reduce("", (prev, curr) -> prev + curr), true) :
             "";
     }
 
     private static String getValueDiv(String content) {
-        return "<div style=\"display:flex;align-items:center;gap:2%\">" + content + "</div>";
+        return "<div style=\"display:flex;align-items:center;gap:2%;flex-grow:1;text-wrap:nowrap\">" + content + "</div>";
     }
 
-    private static String getLabelLine(Text key, String value) {
-        return "<div style=\"display:flex;align-items:center;flex-wrap:wrap;gap:2%\"><b>" + key.getString() + ":</b>" + value + "</div>";
+    private static String getLabelLine(Text key, String value, boolean wrap) {
+        return "<div style=\"display:flex;align-items:center;flex-wrap:" + (wrap ? "" : "no") + "wrap;gap:2%;text-wrap:nowrap\"><b>" + key.getString() + ":</b>" + value + "</div>";
     }
 
     private static String getHeadImage(PolymerHeadBlock polymerHeadBlock) {
         String src = getHeadUrl(polymerHeadBlock);
-        String div = "<div style=\"width:16px;height:16px;overflow:hidden;position:absolute\">";
-        String style = "width:128px;height:128px;margin-top:-16px;margin-left:-";
-        return div + "<img src=\"" + src + "\" style=\"" + style + "16px\"></div>" + div + "<img src=\"" + src + "\" style=\"" + style + "80px\"></div>";
+        return "<div style=\"min-width:16px;width:16px;height:16px;overflow:hidden;background-image:url(" + src + ");background-repeat:no-repeat;background-position:-16px -16px\"><img src=\"" + src +
+            "\" style=\"width:128px;height:128px;margin-top:-16px;margin-left:-48px\"></div>";
     }
 
     private static String getHeadUrl(PolymerHeadBlock polymerHeadBlock) {

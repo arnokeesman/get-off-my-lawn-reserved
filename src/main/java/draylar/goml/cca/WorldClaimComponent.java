@@ -11,8 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-
 public class WorldClaimComponent implements ClaimComponent {
 
     private RTreeMap<ClaimBox, Claim> claims = RTreeMap.create(new ConfigurationBuilder().star().build(), ClaimBox::toBox);
@@ -56,6 +54,7 @@ public class WorldClaimComponent implements ClaimComponent {
                     if (this.world instanceof ServerWorld world1) {
                         claimInfo.internal_updateChunkCount(world1);
                     }
+                    claimInfo.internal_enableUpdates();
                     add(claimInfo);
                 }
             });
@@ -66,6 +65,7 @@ public class WorldClaimComponent implements ClaimComponent {
                 if (this.world instanceof ServerWorld world1) {
                     claimInfo.internal_updateChunkCount(world1);
                 }
+                claimInfo.internal_enableUpdates();
                 add(claimInfo);
             });
         }
@@ -76,9 +76,7 @@ public class WorldClaimComponent implements ClaimComponent {
         NbtList nbtListClaims = new NbtList();
         tag.putInt("Version", 1);
 
-        claims.values().forEach(claim -> {
-            nbtListClaims.add(claim.asNbt());
-        });
+        claims.values().forEach(claim -> nbtListClaims.add(claim.asNbt()));
 
         tag.put("Claims", nbtListClaims);
     }

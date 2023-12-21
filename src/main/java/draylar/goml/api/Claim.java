@@ -71,7 +71,7 @@ public class Claim {
 
     private final List<PlayerEntity> previousTickPlayers = new ArrayList<>();
     private boolean destroyed = false;
-    private boolean created = false;
+    private boolean updatable = false;
 
     @ApiStatus.Internal
     public Claim(MinecraftServer server, Set<UUID> owners, Set<UUID> trusted, BlockPos origin) {
@@ -426,8 +426,13 @@ public class Claim {
     }
 
     @ApiStatus.Internal
-    public void internal_create() {
-        this.created = true;
+    public void internal_enableUpdates() {
+        this.updatable = true;
+    }
+
+    @ApiStatus.Internal
+    public void internal_disableUpdates() {
+        this.updatable = false;
     }
 
     @ApiStatus.Internal
@@ -636,7 +641,7 @@ public class Claim {
     }
 
     private void onUpdated() {
-        if (this.created && !this.destroyed) {
+        if (this.updatable && !this.destroyed) {
             ClaimEvents.CLAIM_UPDATED.invoker().onEvent(this);
         }
     }

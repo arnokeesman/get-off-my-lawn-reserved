@@ -29,7 +29,8 @@
     "augment.VillagerEntityMixin",
     "compat.AE2TinyTNTEntityMixin",
     "compat.BotaniaEntityManaBurstMixin",
-    "compat.BotaniaItemLaputaShardMixin"
+    "compat.BotaniaItemLaputaShardMixin",
+    "compat.DynmapClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1

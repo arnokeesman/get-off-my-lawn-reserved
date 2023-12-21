@@ -88,7 +88,6 @@ dependencies {
 	modImplementation include("eu.pb4:common-protection-api:1.0.0")
 
 	compileOnly "us.dynmap:DynmapCoreAPI:${dynmap_version}"
-	modImplementation "curse.maven:dynmapforge-59433:4958242"  // TODO: remove
 }
 
 processResources {

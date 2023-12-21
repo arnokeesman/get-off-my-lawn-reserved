@@ -75,8 +75,8 @@ public class ClaimAnchorBlock extends Block implements BlockEntityProvider, Poly
                 claimInfo.internal_updateChunkCount(world1);
             }
 
-            claimInfo.internal_create();
             ClaimEvents.CLAIM_CREATED.invoker().onEvent(claimInfo);
+            claimInfo.internal_enableUpdates();
         }
 
         super.onPlaced(world, pos, state, placer, itemStack);
