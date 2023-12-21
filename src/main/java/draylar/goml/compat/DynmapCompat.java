@@ -19,6 +19,8 @@ import java.util.Base64;
 import java.util.Set;
 import java.util.UUID;
 
+import static draylar.goml.GetOffMyLawn.CLAIM;
+
 public class DynmapCompat {
     private static final String gomlMarkerSetId = "gomlMarkerSet";
 
@@ -34,32 +36,54 @@ public class DynmapCompat {
                 if (markerApi.getMarkerSet(gomlMarkerSetId) == null) {
                     markerApi.createMarkerSet(gomlMarkerSetId, "GOML Claims", null, true);
                 }
-                // Render new claims.
-                ClaimEvents.CLAIM_CREATED.register(claim -> {
-                    ServerWorld serverWorld = claim.getWorldInstance(server);
-                    String worldName = "world";
-                    if (serverWorld != null) {
-                        worldName = serverWorld.worldProperties.getLevelName();
-                    }
-                    ClaimCorners corners = getClaimCorners(claim);
-                    AreaMarker marker = markerApi.getMarkerSet(gomlMarkerSetId).createAreaMarker(getClaimId(claim), getClaimLabel(claim, server), true, worldName, corners.x, corners.z, true);
-                    // marker.setRangeY(corners.y[0], corners.y[1]);
-                    int color = COLORS[(claim.getOrigin().hashCode() & 0xFFFF) % COLORS.length];
-                    marker.setFillStyle(0.25, color);
-                    marker.setLineStyle(2, 1, color);
-                });
-                // Update resized claims.
-                ClaimEvents.CLAIM_RESIZED.register((claim, x, y) -> {
-                    ClaimCorners corners = getClaimCorners(claim);
-                    getClaimMarker(claim, markerApi).setCornerLocations(corners.x, corners.z);
-                    // marker.setRangeY(corners.y[0], corners.y[1]);
-                });
-                // Update the label of existing claims.
-                ClaimEvents.CLAIM_UPDATED.register(claim -> getClaimMarker(claim, markerApi).setLabel(getClaimLabel(claim, server), true));
-                // Remove destroyed claims.
-                ClaimEvents.CLAIM_DESTROYED.register(claim -> getClaimMarker(claim, markerApi).deleteMarker());
+                server.getWorlds().forEach(world -> CLAIM.get(world).getClaims().values().filter(claim -> getClaimMarker(claim, markerApi) == null).forEach(claim -> renderClaimArea(claim, server, markerApi)));
+                ClaimEvents.CLAIM_CREATED.register(claim -> renderClaimArea(claim, server, markerApi));
+                ClaimEvents.CLAIM_RESIZED.register((claim, x, y) -> resizeClaimArea(claim, server, markerApi));
+                ClaimEvents.CLAIM_UPDATED.register(claim -> updateClaimArea(claim, server, markerApi));
+                ClaimEvents.CLAIM_DESTROYED.register(claim -> deleteClaimArea(claim, markerApi));
             }
         });
+    }
+
+    private static void renderClaimArea(Claim claim, MinecraftServer server, MarkerAPI markerApi) {
+        ServerWorld serverWorld = claim.getWorldInstance(server);
+        String worldName = "world";
+        if (serverWorld != null) {
+            worldName = serverWorld.worldProperties.getLevelName();
+        }
+        ClaimCorners corners = getClaimCorners(claim);
+        AreaMarker marker = markerApi.getMarkerSet(gomlMarkerSetId).createAreaMarker(getClaimId(claim), getClaimLabel(claim, server), true, worldName, corners.x, corners.z, true);
+        // marker.setRangeY(corners.y[0], corners.y[1]);
+        int color = COLORS[(claim.getOrigin().hashCode() & 0xFFFF) % COLORS.length];
+        marker.setFillStyle(0.25, color);
+        marker.setLineStyle(2, 1, color);
+    }
+
+    private static void resizeClaimArea(Claim claim, MinecraftServer server, MarkerAPI markerApi) {
+        ClaimCorners corners = getClaimCorners(claim);
+        AreaMarker claimArea = getClaimMarker(claim, markerApi);
+        if (claimArea == null) {
+            renderClaimArea(claim, server, markerApi);
+        } else {
+            claimArea.setCornerLocations(corners.x, corners.z);
+            // marker.setRangeY(corners.y[0], corners.y[1]);
+        }
+    }
+
+    private static void updateClaimArea(Claim claim, MinecraftServer server, MarkerAPI markerApi) {
+        AreaMarker claimArea = getClaimMarker(claim, markerApi);
+        if (claimArea == null) {
+            renderClaimArea(claim, server, markerApi);
+        } else {
+            claimArea.setLabel(getClaimLabel(claim, server), true);
+        }
+    }
+
+    private static void deleteClaimArea(Claim claim, MarkerAPI markerApi) {
+        AreaMarker claimArea = getClaimMarker(claim, markerApi);
+        if (claimArea != null) {
+            claimArea.deleteMarker();
+        }
     }
 
     private static String getClaimId(Claim claim) {
