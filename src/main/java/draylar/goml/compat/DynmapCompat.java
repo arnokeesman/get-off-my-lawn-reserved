@@ -2,6 +2,7 @@ package draylar.goml.compat;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
 import draylar.goml.api.Claim;
 import draylar.goml.api.ClaimUtils;
 import draylar.goml.api.event.ClaimEvents;
@@ -18,10 +19,7 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static draylar.goml.GetOffMyLawn.CLAIM;
@@ -137,6 +135,16 @@ public class DynmapCompat {
                 playerNames.put(uuid, name);
                 return getPlayerDiv(name);
             }
+
+            // attempt to get player from server userCache
+            Optional<GameProfile> optionalProfile = server.getUserCache().getByUuid(uuid);
+            if (optionalProfile.isPresent()) {
+                GameProfile profile = optionalProfile.get();
+                String name = profile.getName();
+                playerNames.put(uuid, name);
+                return getPlayerDiv(name);
+            }
+
             return getValueDiv(uuid.toString());
         }).reduce("", (prev, curr) -> prev + curr), true);
     }
